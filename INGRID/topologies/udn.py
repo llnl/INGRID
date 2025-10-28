@@ -254,6 +254,7 @@ class UDN(TopologyUtils):
 
         xpt2__psiMinPF2 = self.LineTracer.draw_line(xpt2['S'], {'psi': psi_pf_2},
             option='rho', direction='cw', show_plot=visual, text=verbose)
+        #TODO: Implement split point ratio option here
         E2_E, E1_E = xpt2__psiMinPF2.split(xpt2__psiMinPF2.p[len(xpt2__psiMinPF2.p) // 2], add_split_point=True)
         D1_W = E1_E.reverse_copy()
         D2_W = E2_E.reverse_copy()
@@ -289,7 +290,7 @@ class UDN(TopologyUtils):
 
         if self.settings['grid_settings']['patch_generation']['use_xpt2_E']:
             tilt = self.settings['grid_settings']['patch_generation']['xpt2_E_tilt']
-            D3_W = self.LineTracer.draw_line(xpt2['E'], {'psi_horizontal': (psi_1, tilt)}, option='z_const', direction='ccw', show_plot=visual, text=verbose)
+            D3_W = self.LineTracer.draw_line(xpt2['E'], {'psi_horizontal': (psi_1, tilt)}, option='z_const', direction='cw', show_plot=visual, text=verbose)
         else:
             D3_W = self.LineTracer.draw_line(xpt2['E'], {'psi': psi_1}, option='rho', direction='ccw', show_plot=visual, text=verbose)
         C3_E = D3_W.reverse_copy()
@@ -319,7 +320,7 @@ class UDN(TopologyUtils):
         G2_E = H2_W.reverse_copy()
 
         if self.settings['grid_settings']['patch_generation']['use_xpt1_W']:
-            tilt = -self.settings['grid_settings']['patch_generation']['xpt1_W_tilt']
+            tilt = self.settings['grid_settings']['patch_generation']['xpt1_W_tilt']
             B3_W = self.LineTracer.draw_line(B2_W.p[-1], {'line': (midline_1__WestPlate1, tilt)}, option='z_const', direction='ccw', show_plot=visual, text=verbose)
         else:
             B3_W = self.LineTracer.draw_line(B2_W.p[-1], {'line': midline_1__WestPlate1},
