@@ -555,33 +555,62 @@ class SF165(TopologyUtils):
         iyseparatrix3 = iyseparatrix2
         iyseparatrix4 = iyseparatrix1
 
-        ix_plate1 = 0
-        ix_cut1 = self.patches['A1'].npol - 1
+        if self.settings["grid_settings"]["up_down_symmetry"] is True:
+            ix_plate1 = 0
+            ix_cut1 = self.patches['A1'].npol - 1
 
-        ix_cut2 = 0
-        for alpha in ['A', 'B', 'C', 'D', 'E']:
-            ix_cut2 += self.patches[alpha + '1'].npol - 1
+            ix_cut2 = 0
+            for alpha in ['A', 'B', 'E']:
+                ix_cut2 += self.patches[alpha + '1'].npol - 1
 
-        ix_plate2 = 0
-        for alpha in ['A', 'B', 'C', 'D', 'E', 'F']:
-            ix_plate2 += self.patches[alpha + '3'].npol - 1
+            ix_plate2 = 0
+            for alpha in ['A', 'B', 'E', 'F']:
+                ix_plate2 += self.patches[alpha + '3'].npol - 1
 
-        ix_plate3 = ix_plate2 + 2
+            ix_plate3 = ix_plate2 + 2
 
-        ix_cut3 = 0
-        for alpha in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
-            ix_cut3 += self.patches[alpha + '1'].npol - 1
-        ix_cut3 += 2
+            ix_cut3 = 0
+            for alpha in ['A', 'B', 'E', 'F', 'G']:
+                ix_cut3 += self.patches[alpha + '1'].npol - 1
+            ix_cut3 += 2
 
-        ix_cut4 = 0
-        for alpha in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']:
-            ix_cut4 += self.patches[alpha + '2'].npol - 1
-        ix_cut4 += 2
+            ix_cut4 = 0
+            for alpha in ['A', 'B', 'E', 'F', 'G', 'H']:
+                ix_cut4 += self.patches[alpha + '2'].npol - 1
+            ix_cut4 += 2
 
-        ix_plate4 = 0
-        for alpha in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']:
-            ix_plate4 += self.patches[alpha + '1'].npol - 1
-        ix_plate4 += 2
+            ix_plate4 = 0
+            for alpha in ['A', 'B', 'E', 'F', 'G', 'H', 'I']:
+                ix_plate4 += self.patches[alpha + '1'].npol - 1
+            ix_plate4 += 2
+        else:
+            ix_plate1 = 0
+            ix_cut1 = self.patches['A1'].npol - 1
+
+            ix_cut2 = 0
+            for alpha in ['A', 'B', 'C', 'D', 'E']:
+                ix_cut2 += self.patches[alpha + '1'].npol - 1
+
+            ix_plate2 = 0
+            for alpha in ['A', 'B', 'C', 'D', 'E', 'F']:
+                ix_plate2 += self.patches[alpha + '3'].npol - 1
+
+            ix_plate3 = ix_plate2 + 2
+
+            ix_cut3 = 0
+            for alpha in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
+                ix_cut3 += self.patches[alpha + '1'].npol - 1
+            ix_cut3 += 2
+
+            ix_cut4 = 0
+            for alpha in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']:
+                ix_cut4 += self.patches[alpha + '2'].npol - 1
+            ix_cut4 += 2
+
+            ix_plate4 = 0
+            for alpha in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']:
+                ix_plate4 += self.patches[alpha + '1'].npol - 1
+            ix_plate4 += 2
 
         psi = np.zeros((nxm + 2, nym + 2, 5), order='F')
         br = np.zeros((nxm + 2, nym + 2, 5), order='F')
