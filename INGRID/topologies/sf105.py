@@ -526,7 +526,7 @@ class SF105(TopologyUtils):
             # Adjust cell grid face along vertical plane
             poloidal_tag, radial_tag = patch.get_tag()
             if poloidal_tag == 'D':
-                patch.AdjustBorder('E', self.patches['D' + radial_tag])
+                patch.AdjustBorder('E', self.patches['E' + radial_tag])
 
             # Circular patch configuration requires adjustment of border to close loop.
             # Convention chosen: 'E' indicates closed loop
