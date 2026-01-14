@@ -283,7 +283,7 @@ class UDN(TopologyUtils):
 
         if self.settings['grid_settings']['patch_generation']['use_xpt2_W']:
             tilt = self.settings['grid_settings']['patch_generation']['xpt2_W_tilt']
-            E3_E = self.LineTracer.draw_line(xpt2['W'], {'psi_horizontal': (psi_2, tilt)}, option='z_const', direction='cw', show_plot=visual, text=verbose).reverse_copy()
+            E3_E = self.LineTracer.draw_line(xpt2['W'], {'psi_horizontal': (psi_2, tilt)}, option='z_const', direction='ccw', show_plot=visual, text=verbose).reverse_copy()
         else:
             E3_E = self.LineTracer.draw_line(xpt2['W'], {'psi': psi_2}, option='rho', direction='ccw', show_plot=visual, text=verbose).reverse_copy()
         F3_W = E3_E.reverse_copy()
