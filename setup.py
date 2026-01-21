@@ -19,7 +19,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 setup(
     name='INGRID',
     version_format='{tag}',
-    setup_requires=['setuptools-git-version'],
+    setup_requires=['setuptools'],
     description='Tokamak edge plasma grid generator',
     long_description=long_description,
     long_description_content_type='text/markdown',
