@@ -18,11 +18,11 @@ class PsinExtender:
         psin_shape = self.psin.shape
         self.num_x = psin_shape[0]
         self.num_y = psin_shape[1]
-        ix_magx, iy_magx = np.unravel_index(self.eqdsk["psi"].argmin(), self.eqdsk["psi"].shape)
-        self.ix_magx = ix_magx 
-        self.iy_magx = iy_magx + 1
-        self.r_magx = self.r[self.ix_magx,0]
-        self.z_magx = self.z[0,self.iy_magx]
+        
+        self.r_magx = self.eqdsk["rmagx"]
+        self.z_magx = self.eqdsk["zmagx"]
+        self.ix_magx = abs(self.r[:,0] - self.r_magx).argmin()
+        self.iy_magx = abs(self.z[0,:] - self.z_magx).argmin()
 
     def _get_monotonic_section(self, arr: np.ndarray) -> int:
         """Find the monotonically increasing region of an input array which starts from the first element
@@ -47,7 +47,7 @@ class PsinExtender:
         num_x = psin_modified.shape[0]
         num_y = psin_modified.shape[1]
 
-        r_mid, psin_mid = self._get_mid_arrays(r_modified, psin_modified, self.iy_magx)
+        r_mid, psin_mid = self._get_mid_arrays(r_modified, psin_modified, self.iy_magx-1)
 
         self._interpfunc_r_psin_in, self._interpfunc_r_psin_out = (
             self._get_interp_funcs_r_psin(r_mid, psin_mid, self.ix_magx)
