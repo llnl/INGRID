@@ -520,10 +520,19 @@ class IngridUtils:
             if not isinstance(geqdsk_data,dict):
                 geqdsk_data = geqdsk_data.__dict__
         
-        if up_down_symmetry or remove_upper_divertor:
+        if up_down_symmetry:
             # Chop off the top half of the domain and join lines of constant psi either side of the midplane  
             pe = PsinExtender(geqdsk_data)
             pe.extend_psi()
+        
+        elif remove_upper_divertor:
+            pe = PsinExtender(geqdsk_data)
+            pe.extend_psi()
+            # self.magx = (pe.r_magx, pe.z_magx)
+            self.settings['grid_settings']['rmagx'] = pe.r_magx
+            self.settings['grid_settings']['zmagx'] = pe.z_magx
+            self.settings['grid_settings']['patch_generation']['rmagx_shift'] = 0.0
+            self.settings['grid_settings']['patch_generation']['zmagx_shift'] = 0.0
 
         #
         # Extract quantities needed to initialize EfitData class

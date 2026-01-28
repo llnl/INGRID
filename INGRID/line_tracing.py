@@ -292,10 +292,13 @@ class LineTracing:
             S_minimizer = minimize(self.PsiCostFunc, S_guess, method='L-BFGS-B',
                 jac=self.grid.Gradient, bounds=[r_bounds, z_bounds]).x
 
-            if (np.linalg.norm(N_minimizer - magx) >= self.eps):
-                self.flip_NSEW_lookup(xpt_ID)
+            if self.settings["grid_settings"]["remove_upper_divertor"]:
+                self.config = 'LSN'
+            else:
+                if (np.linalg.norm(N_minimizer - magx) >= self.eps):
+                    self.flip_NSEW_lookup(xpt_ID)
 
-            self.config = 'LSN' if self.NSEW_lookup['xpt1']['coor']['N'][1] > xpt[1] else 'USN'
+                self.config = 'LSN' if self.NSEW_lookup['xpt1']['coor']['N'][1] > xpt[1] else 'USN'
 
         elif xpt_ID == 'xpt2':
 
