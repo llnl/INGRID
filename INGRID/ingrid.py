@@ -1384,7 +1384,9 @@ class Ingrid(IngridUtils):
                 + 'Must be <= 2).'
             raise ValueError(v_error_str)
 
-        self.LoadGEQDSK(self.settings['eqdsk'], self.settings["grid_settings"]["up_down_symmetry"])
+        self.LoadGEQDSK(self.settings['eqdsk'], 
+                        self.settings["grid_settings"]["up_down_symmetry"], 
+                        self.settings["grid_settings"]["remove_upper_divertor"])
         self.AutoRefineMagAxis()
         self.AutoRefineXPoint()
         if topology == 'DNL':

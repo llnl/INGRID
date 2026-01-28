@@ -1,0 +1,79 @@
+DEBUG:
+  verbose:
+    grid_generation: 0
+    patch_generation: 0
+    target_plates: 0
+  visual:
+    find_NSEW: 0
+    gridue: 0
+    patch_map: 0
+    subgrid: 0
+eqdsk: ../data/UDN/DIII-D/neqdsk
+grid_settings:
+  grid_generation:
+    distortion_correction:
+      all:
+        active: false
+        resolution: 1000
+        theta_max: 120.0
+        theta_min: 80.0
+    np_default: 2
+    nr_default: 2
+    poloidal_f_default: x, x
+    radial_f_default: x, x
+  guard_cell_eps: 0.001
+  nlevs: 30
+  num_xpt: 1
+  patch_generation:
+    xpt1_E_tilt: 0.0
+    xpt1_W_tilt: -0.65
+    rmagx_shift: 0.0
+    xpt2_E_tilt: -2.3
+    xpt2_W_tilt: 3.14
+    strike_pt_loc: limiter
+    magx_tilt_1: 0.0
+    magx_tilt_2: 0.0
+    use_xpt1_E: true
+    use_xpt1_W: true
+    use_xpt2_E: true
+    use_xpt2_W: true
+    zmagx_shift: 0.0
+  remove_upper_divertor: true
+  psi_1: 1.127
+  psi_2: 1.131758078227
+  psi_core: 0.975770930045
+  psi_pf_1: 0.987326087084
+  psi_pf_2: 1.1167326087084
+  rmagx: 1.75785604
+  rxpt: 1.300094032688
+  rxpt2: 1.217505027591
+  view_mode: filled
+  zmagx: 0.0 #-0.0292478683
+  zxpt: -1.133159375304
+  zxpt2: 1.219825715749
+integrator_settings:
+  dt: 0.01
+  eps: 5.0e-05
+  first_step: 5.0e-05
+  max_step: 0.064
+  step_ratio: 0.02
+  tol: 0.005
+limiter:
+  use_efit_bounds: True
+  efit_buffer_r: 0.2
+  efit_buffer_z: 0.2
+target_plates:
+  plate_E1:
+    file: ../data/UDN/DIII-D/d3d_otp.txt
+    zshift: -1.6
+  plate_E2:
+    file: ../data/UDN/SAS1/itp4.txt
+    zshift: 0.0
+    rshift: 0.05
+  plate_W1:
+    file: ../data/UDN/DIII-D/d3d_itp.txt
+    zshift: -1.6
+  plate_W2:
+    file: ../data/UDN/SAS1/SAS_odt.txt
+    zshift: 0.2
+    rshift: -0.145

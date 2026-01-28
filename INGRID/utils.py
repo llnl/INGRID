@@ -8,6 +8,7 @@ generating patch maps, and generating grids.
 
 """
 from __future__ import print_function, division, absolute_import
+from os import remove
 import numpy as np
 import matplotlib
 
@@ -217,6 +218,7 @@ class IngridUtils:
                 "xpt2_S_tilt": -1.570796,
             },
             "up_down_symmetry": False,
+            "remove_upper_divertor": False,
         }
 
         self.default_integrator_settings = {
@@ -506,7 +508,7 @@ class IngridUtils:
                 )
                 continue
 
-    def LoadGEQDSK(self, geqdsk_path: str, up_down_symmetry: bool = False) -> None:
+    def LoadGEQDSK(self, geqdsk_path: str, up_down_symmetry: bool = False, remove_upper_divertor: bool = False) -> None:
         """
         Python class to read the psi data in from an ascii file.
 
@@ -518,7 +520,7 @@ class IngridUtils:
             if not isinstance(geqdsk_data,dict):
                 geqdsk_data = geqdsk_data.__dict__
         
-        if up_down_symmetry:
+        if up_down_symmetry or remove_upper_divertor:
             # Chop off the top half of the domain and join lines of constant psi either side of the midplane  
             pe = PsinExtender(geqdsk_data)
             pe.extend_psi()
@@ -754,7 +756,9 @@ class IngridUtils:
         # Empty list of coordinates falls back on using eqdsk limiter settings
         #
         else:
-            self.LoadGEQDSK(geqdsk_path=self.settings["eqdsk"], up_down_symmetry=self.settings["grid_settings"]["up_down_symmetry"])
+            self.LoadGEQDSK(geqdsk_path=self.settings["eqdsk"], 
+                            up_down_symmetry=self.settings["grid_settings"]["up_down_symmetry"], 
+                            remove_upper_divertor=self.settings["grid_settings"]["remove_upper_divertor"])
             self.geqdsk_data["rlim"] += rshift
             self.geqdsk_data["zlim"] += zshift
 
