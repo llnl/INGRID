@@ -1383,8 +1383,7 @@ class Ingrid(IngridUtils):
                 + f'(User provided {self.settings["grid_settings"]["num_xpt"]}.' \
                 + 'Must be <= 2).'
             raise ValueError(v_error_str)
-
-        self.LoadGEQDSK(self.settings['eqdsk'], self.settings["grid_settings"]["up_down_symmetry"])
+        self.LoadGEQDSK(self.settings['eqdsk'], self.settings["grid_settings"]["up_down_symmetry"], self.settings["analytic_equilibrium_generation"])
         self.AutoRefineMagAxis()
         self.AutoRefineXPoint()
         if topology == 'DNL':

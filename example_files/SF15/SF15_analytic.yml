@@ -1,0 +1,81 @@
+dir_settings:
+  target_plates: ../data/SF15/geo_data
+  patch_data: ../data/SF15/patch_data/
+  limiter: ../data/SF15/geo_data
+DEBUG:
+  verbose:
+    grid_generation: 0
+    patch_generation: 1
+    target_plates: 0
+  visual:
+    SF_analysis: 0
+    find_NSEW: 0
+    gridue: 0
+    patch_map: 0
+    subgrid: 0
+analytic_equilibrium_generation:
+  use: true  # Whether to generate an equilibrium instead of reading from a eqdsk file
+  i1: 0.400  # Current through filament 1 [MA]
+  i2: 0.120  # Current through filament 1 [MA]
+  i3: 0.112  # Current through filament 1 [MA]
+  r_i1: 1.0  # R position of filament 1 [m]
+  z_i1: 0.0  # Z position of filament 1 [m]
+  r_i2: 0.6  # R position of filament 2 [m]
+  z_i2: -1.5 # Z position of filament 2 [m]
+  r_i3: 1.4  # R position of filament 3 [m]
+  z_i3: -1.5 # Z position of filament 3 [m]
+grid_settings:
+  grid_generation:
+    distortion_correction:
+      all:
+        active: true
+        resolution: 1000
+        theta_max: 120.0
+        theta_min: 80.0
+    np_default: 4
+    nr_default: 4
+    nr_1: 8
+    nr_2: 2
+    poloidal_f_default: x, x
+    radial_f_default: x, x
+  guard_cell_eps: 0.001
+  nlevs: 30
+  num_xpt: 2
+  patch_generation:
+    xpt1_E_tilt: 0.0
+    xpt1_W_tilt: 0.0
+    rmagx_shift: 0.0
+    xpt2_E_tilt: 0.5
+    xpt2_W_tilt: 0.5
+    # strike_pt_loc: target_plates
+    strike_pt_loc: limiter
+    magx_tilt_1: 0.0
+    magx_tilt_2: 0.0
+    use_xpt1_E: false
+    use_xpt1_W: false
+    use_xpt2_E: false
+    use_xpt2_W: false
+    zmagx_shift: 0.0
+  psi_1: 1.03
+  psi_2: 1.015
+  psi_core: 0.90
+  psi_pf_1: 0.97
+  psi_pf_2: 0.98
+  rmagx: 1.00
+  rxpt: 0.8
+  rxpt2: 1.2
+  view_mode: filled
+  zmagx: 0.0
+  zxpt: -1.2
+  zxpt2: -1.2
+limiter:
+  use_efit_bounds: true
+  rshift: 0.0
+  zshift: 0.45
+integrator_settings:
+  dt: 0.01
+  eps: 5.0e-06
+  first_step: 5.0e-05
+  max_step: 0.064
+  step_ratio: 0.02
+  tol: 0.005
