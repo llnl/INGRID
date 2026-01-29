@@ -1,5 +1,7 @@
 import numpy as np
 import freeqdsk
+import contourpy
+from matplotlib.patches import Polygon
 
 def psi_analytic(x, y, x0, y0, a0=0.1):
 
@@ -33,4 +35,59 @@ def psi_analytic3(x: np.ndarray, y: np.ndarray, p1: tuple, p2: tuple, p3: tuple,
 
     return psi
 
+def find_psi_boundaries(r, z, r_grid, z_grid, rmagx, zmagx, psi, n_candidates = 1000):
+    """Attempt to find psi at the magnetic axis and the primary separatrix for the generated psi.
+    The approach is to loop through values of psi (in order) from psi at the magnetic axis to 
+    max(psi). Next we identify the spatial of coordinates contours at that value of psi. The 
+    criteria for identifying the separatrix is that it is the last value of psi for which a) a 
+    contour encloses the magnetic axis and b) it is a closed loop. 
 
+    :param r: r-coordinates
+    :param z: z-coordintaes
+    :param r_grid: r-grid
+    :param z_grid: z-grid
+    :param rmagx: r-coordinate of magx
+    :param zmagx: z-coordinate of magx
+    :param psi: psi
+    :return: psi_magx, psi_sepx
+    """
+    ix_magx = abs(r - rmagx).argmin()
+    iy_magx = abs(z - zmagx).argmin()
+    psi_magx = psi[ix_magx,iy_magx]
+    candidate_psis = np.linspace(psi_magx+0.01*(psi.max()-psi_magx), psi.max(), n_candidates)
+
+    cg = contourpy.contour_generator(x=r_grid, y=z_grid, z=psi)
+
+    psi_sepx = None
+    for candidate_psi in candidate_psis:
+        cg = contourpy.contour_generator(x=r_grid, y=z_grid, z=psi)
+        l = cg.lines(candidate_psi)
+
+        contours_closed = []
+        contains_magx = []
+
+        # Check for closed contours
+        for cl in l:
+            contours_closed.append(all(cl[0] == cl[-1]))
+
+        if any(contours_closed):
+            # Check whether the magnetic axis is within each contour
+            for i, cl in enumerate(l):
+                if contours_closed[i] is True:
+                    sepx_candidate = Polygon(np.array([cl[:,0], cl[:,1]]).transpose(),
+                        closed=True,
+                        facecolor="white",
+                        edgecolor="none"
+                        )
+                    contains_magx.append(sepx_candidate.contains_point(((rmagx, zmagx))))    
+
+        if any(contours_closed) and any(contains_magx):
+            continue
+        else:
+            psi_sepx =  candidate_psi
+            break
+    
+    if psi_sepx is None:
+        psi_sepx = candidate_psis[-1]
+
+    return psi_magx, psi_sepx

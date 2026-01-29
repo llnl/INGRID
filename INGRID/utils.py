@@ -27,7 +27,7 @@ from INGRID.interpol import EfitData
 from INGRID.line_tracing import LineTracing
 from INGRID.geometry import Point, Line, Patch, orientation_between
 from INGRID.udsym_tools import PsinExtender
-from INGRID.generate_analytic_eq import psi_analytic3
+from INGRID.generate_analytic_eq import psi_analytic3, find_psi_boundaries
 
 class IngridUtils:
     """
@@ -569,6 +569,12 @@ class IngridUtils:
         # Generate psi
         psi = psi_analytic3(r_grid, z_grid, p1, p2, p3, i1, i2, i3)
 
+        try:
+            psi_magx, psi_sepx = find_psi_boundaries(r, z, r_grid, z_grid, rmagx, zmagx, psi)
+        except:
+            psi_magx = None 
+            psi_sepx = None
+
         # Generate the geqdsk dictionary
         # Generate the geqdsk file
         geqdsk_data = freeqdsk.geqdsk.GeqdskDataDict(
@@ -586,7 +592,9 @@ class IngridUtils:
             bcentr=bcentr,
             rlim=rlim,
             zlim=zlim,
-            rcentr=rcentr
+            rcentr=rcentr,
+            simagx=psi_magx,
+            sibdry=psi_sepx,
         )
 
         return geqdsk_data
