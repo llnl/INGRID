@@ -8,7 +8,7 @@ generating patch maps, and generating grids.
 
 """
 from __future__ import print_function, division, absolute_import
-from os import remove
+import freeqdsk
 import numpy as np
 import matplotlib
 
@@ -27,6 +27,7 @@ from INGRID.interpol import EfitData
 from INGRID.line_tracing import LineTracing
 from INGRID.geometry import Point, Line, Patch, orientation_between
 from INGRID.udsym_tools import PsinExtender
+from INGRID.generate_analytic_eq import psi_analytic3, find_psi_boundaries
 
 class IngridUtils:
     """
@@ -156,6 +157,7 @@ class IngridUtils:
         - 'target_plates'
         - 'limiter'
         - 'patch_data'
+        - 'analytic_equilibrium_generation'
         - 'DEBUG'
 
         Additional entries may be added here as development continues.
@@ -274,6 +276,25 @@ class IngridUtils:
             "target_plates": ".",
         }
 
+        self.analytic_equilibrium_generation_settings = {
+            "active": False,
+            "nx": 128,
+            "ny": 128,
+            "r_i1": 1.0,
+            "z_i1": 0.0,
+            "r_i2": 0.6,
+            "z_i2": -1.5,
+            "r_i3": 1.4,
+            "z_i3": -1.5,
+            "bcentr": -1.0,
+            "i1": 0.40,
+            "i2": 0.12,
+            "i3": 0.16,
+            "a1": 0.5,
+            "a2": 0.1,
+            "a3": 0.1,
+        }
+
         self.default_values_lookup = {
             "eqdsk": "",
             "dir_settings": self.default_dir_settings,
@@ -282,6 +303,7 @@ class IngridUtils:
             "target_plates": self.default_target_plate_settings,
             "limiter": self.default_limiter_settings,
             "patch_data": self.default_patch_data_settings,
+            "analytic_equilibrium_generation": self.analytic_equilibrium_generation_settings,
             "DEBUG": self.default_DEBUG_settings,
         }
 
@@ -449,6 +471,7 @@ class IngridUtils:
         self.grid_settings = settings["grid_settings"]
         self.integrator_settings = settings["integrator_settings"]
         self.target_plates = settings["target_plates"]
+        self.analytic_equilibrium_generation_settings = settings["analytic_equilibrium_generation"]
         self.DEBUG = settings["DEBUG"]
         self.ProcessPaths()
 
@@ -508,17 +531,100 @@ class IngridUtils:
                 )
                 continue
 
-    def LoadGEQDSK(self, geqdsk_path: str, up_down_symmetry: bool = False, remove_upper_divertor: bool = False) -> None:
+    def GenerateAnalyticEquilibrium(self, generate_eq_settings: dict) -> freeqdsk.geqdsk.GeqdskDataDict:
+        """Use the settings provided in the input file to generate an analytic snowflake equilibrium using a simple three-current model
+
+        :param generate_eq_settings: Settings for analytic equilibrium generation
+        :return: geqdsk dictionary
+        """
+        # Constants 
+        mu_0 = 1.2566e-6
+
+        # User-specified parameters
+        nx = generate_eq_settings["nx"] 
+        ny = generate_eq_settings["ny"] 
+        p1 = (generate_eq_settings["r_i1"],generate_eq_settings["z_i1"])
+        p2 = (generate_eq_settings["r_i2"],generate_eq_settings["z_i2"])
+        p3 = (generate_eq_settings["r_i3"],generate_eq_settings["z_i3"])
+        bcentr = generate_eq_settings["bcentr"] 
+        i1 =  generate_eq_settings["i1"] * mu_0 * 1e6 / (4*np.pi) 
+        i2 =  generate_eq_settings["i2"] * mu_0 * 1e6 / (4*np.pi)
+        i3 =  generate_eq_settings["i3"] * mu_0 * 1e6 / (4*np.pi)
+        a1 =  generate_eq_settings["a1"]
+        a2 =  generate_eq_settings["a2"]
+        a3 =  generate_eq_settings["a3"]
+
+
+        # Derived parameters
+        rleft = min([p1[0], p2[0], p3[0]]) - (max([p1[0], p2[0], p3[0]]) - min([p1[0], p2[0], p3[0]]))
+        rdim = 3*(max([p1[0], p2[0], p3[0]]) - min([p1[0], p2[0], p3[0]]))
+        zmid = p1[1]
+        zdim = 2.5*(zmid-min([p1[1], p2[1], p3[1]]))
+        rmagx = p1[0]
+        zmagx = p1[1]
+        rcentr = rmagx
+
+        # Generate coordinates
+        rmin = rleft
+        rmax = rmin + rdim
+        zmin = zmid - 0.5 * zdim
+        zmax = zmin + zdim
+        r = np.linspace(rmin,rmax, nx)
+        z = np.linspace(zmin,zmax, ny)
+        r_grid, z_grid = np.meshgrid(r, z)
+        r_grid = r_grid.T
+        z_grid = z_grid.T
+        rlim = np.array([rmin, rmax, rmax, rmin])
+        zlim = np.array([zmax, zmax, zmin, zmin])
+
+        # Generate psi
+        psi = psi_analytic3(r_grid, z_grid, p1, p2, p3, i1, i2, i3, a1, a2, a3)
+
+        try:
+            psi_magx, psi_sepx = find_psi_boundaries(r, z, r_grid, z_grid, rmagx, zmagx, psi)
+        except:
+            psi_magx = None 
+            psi_sepx = None
+
+        # Generate the geqdsk dictionary
+        # Generate the geqdsk file
+        geqdsk_data = freeqdsk.geqdsk.GeqdskDataDict(
+            nx=nx, 
+            ny=ny, 
+            rdim=rdim, 
+            zdim=zdim, 
+            rleft=rleft, 
+            zmid=zmid, 
+            rmagx=rmagx,
+            zmagx=zmagx,
+            r_grid=r_grid, 
+            z_grid=z_grid,
+            psi=psi,
+            bcentr=bcentr,
+            rlim=rlim,
+            zlim=zlim,
+            rcentr=rcentr,
+            simagx=psi_magx,
+            sibdry=psi_sepx,
+        )
+
+        return geqdsk_data
+
+    
+    def LoadGEQDSK(self, geqdsk_path: str, up_down_symmetry: bool = False, remove_upper_divertor: bool = False, generate_eq_settings: dict = {"use": False}) -> None:
         """
         Python class to read the psi data in from an ascii file.
 
         Saves the boundary information and generates an EfitData instance.
         """
 
-        with open(geqdsk_path, "r") as f:
-            geqdsk_data = geqdsk.read(f)
-            if not isinstance(geqdsk_data,dict):
-                geqdsk_data = geqdsk_data.__dict__
+        if generate_eq_settings["active"] is True:
+            geqdsk_data = self.GenerateAnalyticEquilibrium(generate_eq_settings)
+        else:
+            with open(geqdsk_path, "r") as f:
+                geqdsk_data = geqdsk.read(f)
+                if not isinstance(geqdsk_data,dict):
+                    geqdsk_data = geqdsk_data.__dict__
         
         if up_down_symmetry:
             # Chop off the top half of the domain and join lines of constant psi either side of the midplane  
@@ -767,7 +873,8 @@ class IngridUtils:
         else:
             self.LoadGEQDSK(geqdsk_path=self.settings["eqdsk"], 
                             up_down_symmetry=self.settings["grid_settings"]["up_down_symmetry"], 
-                            remove_upper_divertor=self.settings["grid_settings"]["remove_upper_divertor"])
+                            remove_upper_divertor=self.settings["grid_settings"]["remove_upper_divertor"],
+                            generate_eq_settings=self.settings["analytic_equilibrium_generation"])
             self.geqdsk_data["rlim"] += rshift
             self.geqdsk_data["zlim"] += zshift
 
