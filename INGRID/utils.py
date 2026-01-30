@@ -220,6 +220,7 @@ class IngridUtils:
                 "xpt2_S_tilt": -1.570796,
             },
             "up_down_symmetry": False,
+            "remove_upper_divertor": False,
         }
 
         self.default_integrator_settings = {
@@ -559,9 +560,6 @@ class IngridUtils:
         rdim = 3*(max([p1[0], p2[0], p3[0]]) - min([p1[0], p2[0], p3[0]]))
         zmid = p1[1]
         zdim = 2.5*(zmid-min([p1[1], p2[1], p3[1]]))
-        rmagx = p1[0]
-        zmagx = p1[1]
-        rcentr = rmagx
 
         # Generate coordinates
         rmin = rleft
@@ -579,6 +577,13 @@ class IngridUtils:
         # Generate psi
         psi = psi_analytic3(r_grid, z_grid, p1, p2, p3, i1, i2, i3, a1, a2, a3)
 
+        # Find magnetic axis
+        ix_magx, iy_magx = np.unravel_index(psi.argmin(), psi.shape)
+        rmagx = r[ix_magx]
+        zmagx = z[iy_magx]
+        rcentr = rmagx
+
+        # Find psi_magx and psi_sepx
         try:
             psi_magx, psi_sepx = find_psi_boundaries(r, z, r_grid, z_grid, rmagx, zmagx, psi)
         except:
@@ -610,7 +615,7 @@ class IngridUtils:
         return geqdsk_data
 
     
-    def LoadGEQDSK(self, geqdsk_path: str, up_down_symmetry: bool = False, generate_eq_settings: dict = {"use": False}) -> None:
+    def LoadGEQDSK(self, geqdsk_path: str, up_down_symmetry: bool = False, remove_upper_divertor: bool = False, generate_eq_settings: dict = {"use": False}) -> None:
         """
         Python class to read the psi data in from an ascii file.
 
@@ -629,6 +634,15 @@ class IngridUtils:
             # Chop off the top half of the domain and join lines of constant psi either side of the midplane  
             pe = PsinExtender(geqdsk_data)
             pe.extend_psi()
+        
+        elif remove_upper_divertor:
+            pe = PsinExtender(geqdsk_data)
+            pe.extend_psi()
+            # self.magx = (pe.r_magx, pe.z_magx)
+            self.settings['grid_settings']['rmagx'] = pe.r_magx
+            self.settings['grid_settings']['zmagx'] = pe.z_magx
+            self.settings['grid_settings']['patch_generation']['rmagx_shift'] = 0.0
+            self.settings['grid_settings']['patch_generation']['zmagx_shift'] = 0.0
 
         #
         # Extract quantities needed to initialize EfitData class
@@ -861,7 +875,10 @@ class IngridUtils:
         # Empty list of coordinates falls back on using eqdsk limiter settings
         #
         else:
-            self.LoadGEQDSK(geqdsk_path=self.settings["eqdsk"], up_down_symmetry=self.settings["grid_settings"]["up_down_symmetry"],generate_eq_settings=self.settings["analytic_equilibrium_generation"])
+            self.LoadGEQDSK(geqdsk_path=self.settings["eqdsk"], 
+                            up_down_symmetry=self.settings["grid_settings"]["up_down_symmetry"], 
+                            remove_upper_divertor=self.settings["grid_settings"]["remove_upper_divertor"],
+                            generate_eq_settings=self.settings["analytic_equilibrium_generation"])
             self.geqdsk_data["rlim"] += rshift
             self.geqdsk_data["zlim"] += zshift
 
