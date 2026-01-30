@@ -16,8 +16,11 @@ DEBUG:
 analytic_equilibrium_generation:
   use: true  # Whether to generate an equilibrium instead of reading from a eqdsk file
   i1: 0.400  # Current through filament 1 [MA]
-  i2: 0.120  # Current through filament 1 [MA]
-  i3: 0.112  # Current through filament 1 [MA]
+  i2: 0.120  # Current through filament 2 [MA]
+  i3: 0.112  # Current through filament 3 [MA]
+  a1: 0.8    # Radius of filament 1 [m]
+  a2: 0.1    # Radius of filament 2 [m]
+  a3: 0.1    # Radius of filament 3 [m]
   r_i1: 1.0  # R position of filament 1 [m]
   z_i1: 0.0  # Z position of filament 1 [m]
   r_i2: 0.6  # R position of filament 2 [m]
@@ -56,11 +59,11 @@ grid_settings:
     use_xpt2_E: false
     use_xpt2_W: false
     zmagx_shift: 0.0
-  psi_1: 1.03
-  psi_2: 1.015
-  psi_core: 0.90
-  psi_pf_1: 0.97
-  psi_pf_2: 0.98
+  psi_1: 1.2
+  psi_2: 1.11
+  psi_core: 0.80
+  psi_pf_1: 0.81
+  psi_pf_2: 0.82
   rmagx: 1.00
   rxpt: 0.8
   rxpt2: 1.2
