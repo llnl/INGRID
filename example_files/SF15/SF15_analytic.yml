@@ -14,7 +14,7 @@ DEBUG:
     patch_map: 0
     subgrid: 0
 analytic_equilibrium_generation:
-  use: true  # Whether to generate an equilibrium instead of reading from a eqdsk file
+  active: true  # Whether to generate an equilibrium instead of reading from a eqdsk file
   i1: 0.400  # Current through filament 1 [MA]
   i2: 0.120  # Current through filament 2 [MA]
   i3: 0.112  # Current through filament 3 [MA]

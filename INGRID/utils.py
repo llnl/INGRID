@@ -276,7 +276,7 @@ class IngridUtils:
         }
 
         self.analytic_equilibrium_generation_settings = {
-            "use": False,
+            "active": False,
             "nx": 128,
             "ny": 128,
             "r_i1": 1.0,
@@ -617,7 +617,7 @@ class IngridUtils:
         Saves the boundary information and generates an EfitData instance.
         """
 
-        if generate_eq_settings["use"] is True:
+        if generate_eq_settings["active"] is True:
             geqdsk_data = self.GenerateAnalyticEquilibrium(generate_eq_settings)
         else:
             with open(geqdsk_path, "r") as f:
