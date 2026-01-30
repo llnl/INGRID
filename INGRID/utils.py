@@ -560,9 +560,6 @@ class IngridUtils:
         rdim = 3*(max([p1[0], p2[0], p3[0]]) - min([p1[0], p2[0], p3[0]]))
         zmid = p1[1]
         zdim = 2.5*(zmid-min([p1[1], p2[1], p3[1]]))
-        rmagx = p1[0]
-        zmagx = p1[1]
-        rcentr = rmagx
 
         # Generate coordinates
         rmin = rleft
@@ -580,6 +577,13 @@ class IngridUtils:
         # Generate psi
         psi = psi_analytic3(r_grid, z_grid, p1, p2, p3, i1, i2, i3, a1, a2, a3)
 
+        # Find magnetic axis
+        ix_magx, iy_magx = np.unravel_index(psi.argmin(), psi.shape)
+        rmagx = r[ix_magx]
+        zmagx = z[iy_magx]
+        rcentr = rmagx
+
+        # Find psi_magx and psi_sepx
         try:
             psi_magx, psi_sepx = find_psi_boundaries(r, z, r_grid, z_grid, rmagx, zmagx, psi)
         except:
