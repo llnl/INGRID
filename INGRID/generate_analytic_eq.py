@@ -16,7 +16,18 @@ def psi_analytic(x, y, x0, y0, a0=0.1):
     return res
 
 
-def psi_analytic3(x: np.ndarray, y: np.ndarray, p1: tuple, p2: tuple, p3: tuple, i1: float, i2: float, i3: float):
+def psi_analytic3(x: np.ndarray, 
+                  y: np.ndarray, 
+                  p1: tuple, 
+                  p2: tuple, 
+                  p3: tuple, 
+                  i1: float, 
+                  i2: float, 
+                  i3: float,
+                  a1: float,
+                  a2: float,
+                  a3: float,
+    ):
     """Generate analytic psi from three currents
 
     :param x: x-coorindates
@@ -27,11 +38,14 @@ def psi_analytic3(x: np.ndarray, y: np.ndarray, p1: tuple, p2: tuple, p3: tuple,
     :param i1: current through filament 1
     :param i2: current through filament 2
     :param i3: current through filament 3
+    :param a1: radius of filament 1
+    :param a2: radius of filament 2
+    :param a3: radius of filament 3
     :return: psi
     """
-    psi = i1 * psi_analytic(x, y, p1[0], p1[1])
-    psi += i2 * psi_analytic(x, y, p2[0], p2[1])
-    psi += i3 * psi_analytic(x, y, p3[0], p3[1])
+    psi = i1 * psi_analytic(x, y, p1[0], p1[1], a1)
+    psi += i2 * psi_analytic(x, y, p2[0], p2[1], a2)
+    psi += i3 * psi_analytic(x, y, p3[0], p3[1], a3)
 
     return psi
 

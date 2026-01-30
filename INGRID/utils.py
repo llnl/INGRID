@@ -289,6 +289,9 @@ class IngridUtils:
             "i1": 0.40,
             "i2": 0.12,
             "i3": 0.16,
+            "a1": 0.5,
+            "a2": 0.1,
+            "a3": 0.1,
         }
 
         self.default_values_lookup = {
@@ -533,6 +536,9 @@ class IngridUtils:
         :param generate_eq_settings: Settings for analytic equilibrium generation
         :return: geqdsk dictionary
         """
+        # Constants 
+        mu_0 = 1.2566e-6
+
         # User-specified parameters
         nx = generate_eq_settings["nx"] 
         ny = generate_eq_settings["ny"] 
@@ -540,9 +546,13 @@ class IngridUtils:
         p2 = (generate_eq_settings["r_i2"],generate_eq_settings["z_i2"])
         p3 = (generate_eq_settings["r_i3"],generate_eq_settings["z_i3"])
         bcentr = generate_eq_settings["bcentr"] 
-        i1 =  generate_eq_settings["i1"] 
-        i2 =  generate_eq_settings["i2"] 
-        i3 =  generate_eq_settings["i3"] 
+        i1 =  generate_eq_settings["i1"] * mu_0 * 1e6 / (4*np.pi) 
+        i2 =  generate_eq_settings["i2"] * mu_0 * 1e6 / (4*np.pi)
+        i3 =  generate_eq_settings["i3"] * mu_0 * 1e6 / (4*np.pi)
+        a1 =  generate_eq_settings["a1"]
+        a2 =  generate_eq_settings["a2"]
+        a3 =  generate_eq_settings["a3"]
+
 
         # Derived parameters
         rleft = min([p1[0], p2[0], p3[0]]) - (max([p1[0], p2[0], p3[0]]) - min([p1[0], p2[0], p3[0]]))
@@ -567,7 +577,7 @@ class IngridUtils:
         zlim = np.array([zmax, zmax, zmin, zmin])
 
         # Generate psi
-        psi = psi_analytic3(r_grid, z_grid, p1, p2, p3, i1, i2, i3)
+        psi = psi_analytic3(r_grid, z_grid, p1, p2, p3, i1, i2, i3, a1, a2, a3)
 
         try:
             psi_magx, psi_sepx = find_psi_boundaries(r, z, r_grid, z_grid, rmagx, zmagx, psi)
