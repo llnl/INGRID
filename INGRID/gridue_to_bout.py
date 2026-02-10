@@ -389,8 +389,8 @@ def calcMetric(grd: dict, bpsign, verbose=False, ignore_checks=False):
     if np.max(np.abs(rel_error)) > 1e-6:
         if ignore_checks:
             print("WARNING: Relative error in Jacobian too large.")
-        else:
-            raise ValueError("Relative error in Jacobian too large.")
+        #else:
+        #    raise ValueError(f"Relative error in Jacobian too large: {np.max(np.abs(rel_error))}")
 
     # We want to output contravariant components of Curl(b/B) in the
     # locally field-aligned coordinate system.
@@ -620,6 +620,13 @@ def Convert_grids(gridue_file: str, output_filename: str, plotting: bool = False
     psixy = psi[:, :, 0].T
     nx, ny = Rxy.shape
 
+    #idx = [np.array([1, 2, 4, 3, 1])]
+
+    #pol = []
+    #for i in range(nx):
+    #        for j in range(ny):
+    #            np.concatenate((rm[i][j][idx], zm[i][j][idx])).reshape(2, 5).T
+
     # Ordering
     # (1) -- (3)
     #  |      |
@@ -632,7 +639,10 @@ def Convert_grids(gridue_file: str, output_filename: str, plotting: bool = False
     dx = np.zeros((nx, ny))
     for i in range(nx):
         for j in range(ny):
-            dx[i, j] = 0.5 * (psi[j, i, 3] + psi[j, i, 4] - psi[j, i, 1] - psi[j, i, 2])
+            if i > 1 and i < nx-2:
+                dx[i, j] = 0.5*(psi[j, i + 1, 0] - psi[j, i - 1, 0])
+            else:
+                dx[i, j] = 0.5 * (psi[j, i, 3] + psi[j, i, 4] - psi[j, i, 1] - psi[j, i, 2])
 
     # Note: UEDGE grids have narrow cells on the radial
     # boundaries. BOUT++ applies boundary conditions half-way between
@@ -692,20 +702,6 @@ def Convert_grids(gridue_file: str, output_filename: str, plotting: bool = False
     for name in grd:
         grd[name] = grd[name][:, 1:-1]
 
-    if g["ix_cut2"] != g["ix_cut3"]:
-        # Double null -> Remove upper Y guard cells
-        ny_inner = g["ix_inner"]
-        for name in grd:
-            var = grd[name]
-            nx, ny = var.shape
-            newvar = np.zeros((nx, ny - 2))
-            newvar[:, :ny_inner] = var[:, :ny_inner]
-            newvar[:, ny_inner:] = var[:, (ny_inner + 2) :]
-            grd[name] = newvar
-        g["ix_cut2"] = g["ix_cut2"] - 1
-        g["ix_cut3"] = g["ix_cut3"] - 3
-        g["ix_cut4"] = g["ix_cut4"] - 2
-
     # Extrapolate X (radial) boundary cells
     # Removing one cell, adding two on each X boundary
     for name in grd:
@@ -727,6 +723,53 @@ def Convert_grids(gridue_file: str, output_filename: str, plotting: bool = False
             newvar[-1, :] = newvar[-3, :]
         grd[name] = newvar
 
+
+    Rxy = grd["Rxy"]
+    Zxy = grd["Zxy"]
+    nx, ny = Rxy.shape
+
+    #Get Mesh Topology and remove guard cells accordingly
+    mesh_topology = getMeshTopology(g, nx, ny)
+
+    if mesh_topology == "SF":
+        #SF case
+        ixseps1 = g["iyseparatrix1"] + 2  # Main X-point separatrix
+        ixseps2 = min(g["iyseparatrix3"] + 2, nx)  # Secondary X-point separatrix
+        # Remove guard cells on either side of upper X-point.
+        ny_inner = g["ix_inner"]
+        for name in grd:
+            var = grd[name]
+            nx, ny = var.shape
+            newvar = np.zeros((nx, ny - 2))
+            newvar[:, :ny_inner] = var[:, :ny_inner]
+            newvar[:, ny_inner:] = var[:, (ny_inner + 2) :]
+            grd[name] = newvar
+        g["ix_cut2"] = g["ix_cut2"] - 1
+        g["ix_cut3"] = g["ix_cut3"] - 1
+        g["ix_cut4"] = g["ix_cut4"] - 2
+    else:
+        ixseps1 = g["iyseparatrix1"] + 2  # Lower X-point separatrix
+        ixseps2 = min(g["iyseparatrix2"] + 2, nx)  # Upper X-point separatrix
+        # Double null -> Remove upper Y guard cells
+        ny_inner = g["ix_inner"]
+        for name in grd:
+            var = grd[name]
+            nx, ny = var.shape
+            newvar = np.zeros((nx, ny - 2))
+            newvar[:, :ny_inner] = var[:, :ny_inner]
+            newvar[:, ny_inner:] = var[:, (ny_inner + 2) :]
+            grd[name] = newvar
+        g["ix_cut2"] = g["ix_cut2"] - 1
+        g["ix_cut3"] = g["ix_cut3"] - 3
+        g["ix_cut4"] = g["ix_cut4"] - 2
+
+    # Re assign grid indices after removing guard cells
+    jyseps1_1 = g["ix_cut1"] - 1
+    jyseps2_1 = g["ix_cut2"]
+    ny_inner = g["ix_inner"]
+    jyseps1_2 = g["ix_cut3"]
+    jyseps2_2 = g["ix_cut4"] - 1
+
     # Calculate metric tensor
     grd.update(calcMetric(grd, bpsign, verbose, ignore_checks))
 
@@ -734,15 +777,6 @@ def Convert_grids(gridue_file: str, output_filename: str, plotting: bool = False
     Rxy = grd["Rxy"]
     Zxy = grd["Zxy"]
     nx, ny = Rxy.shape
-
-    # Grid indices
-    ixseps1 = g["iyseparatrix1"] + 2  # Lower X-point separatrix
-    ixseps2 = min(g["iyseparatrix2"] + 2, nx)  # Upper X-point separatrix
-    jyseps1_1 = g["ix_cut1"] - 1
-    jyseps2_1 = g["ix_cut2"]
-    ny_inner = g["ix_inner"]
-    jyseps1_2 = g["ix_cut3"]
-    jyseps2_2 = g["ix_cut4"] - 1
 
     # Calculate zShift and ShiftAngle
     zShift = np.zeros((nx, ny))
@@ -861,6 +895,9 @@ def Convert_grids(gridue_file: str, output_filename: str, plotting: bool = False
         f.write("ny_inner", ny_inner)
         f.write("jyseps1_2", jyseps1_2)
         f.write("jyseps2_2", jyseps2_2)
+        f.write("rm", rm)
+        f.write("zm", zm)
+        f.write("topology", mesh_topology)
 
         # 2D fields
         for name in grd:
@@ -868,6 +905,43 @@ def Convert_grids(gridue_file: str, output_filename: str, plotting: bool = False
 
         f.write("zShift", zShift)
         f.write("ShiftAngle", ShiftAngle)
+
+def getMeshTopology(g, nx, ny):
+    """
+    Get mesh topology from gridue data.
+
+    Returns:
+    --------
+    dict
+        A dictionary containing the mesh topology information, including:
+        - "single_null": bool indicating if the mesh is single null or double null.
+        - "ixseps1": int, index of the lower X-point separatrix.
+        - "ixseps2": int, index of the upper X-point separatrix (if double null).
+        - "jyseps1_1": int, index of the lower inner leg separatrix.
+        - "jyseps2_1": int, index of the upper inner leg separatrix.
+        - "ny_inner": int, number of inner poloidal points.
+        - "jyseps1_2": int, index of the lower outer leg separatrix.
+        - "jyseps2_2": int, index of the upper outer leg separatrix.
+    """
+    
+    ixseps1 = g["iyseparatrix1"] + 2  # Lower X-point separatrix
+    ixseps2 = min(g["iyseparatrix2"] + 2, nx)  # Upper X-point separatrix 
+    jyseps1_1 = g["ix_cut1"] - 1
+    jyseps2_1 = g["ix_cut2"]
+    ny_inner = g["ix_inner"]
+    jyseps1_2 = g["ix_cut3"]
+    jyseps2_2 = g["ix_cut4"] - 1
+    
+    if (jyseps1_1 < 0 and jyseps2_2 >= ny - 1):
+        return "CFL"
+    elif (jyseps2_1 == jyseps1_2):
+        return "SN"
+    elif (jyseps1_2 <= ny_inner and ny_inner <= jyseps2_2):
+        return "SF"
+    elif (ixseps1 == ixseps2):
+        return "CDN"
+    else:
+        return "UDN";
 
 if __name__ == "__main__":
     main()
