@@ -8,8 +8,8 @@
 #  Copyright 2019 J.T. Omotani
 #
 #
-# Modified by S. Ruiz, 2025 from the orinigal gridue_to_bout.py made by B. Dudson.
-#
+# Modified and finished by S. Ruiz, 2025 from the orinigal gridue_to_bout.py made by B. Dudson.
+# Further info in https://github.com/boutproject/boutdata
 #
 
 import numpy as np
@@ -702,28 +702,6 @@ def Convert_grids(gridue_file: str, output_filename: str, plotting: bool = False
     for name in grd:
         grd[name] = grd[name][:, 1:-1]
 
-    # Extrapolate X (radial) boundary cells
-    # Removing one cell, adding two on each X boundary
-    for name in grd:
-        var = grd[name]
-        nx, ny = var.shape
-        newvar = np.zeros((nx + 2, ny))
-        newvar[2:-2, :] = var[1:-1, :]
-        if name in ["Rxy", "Zxy", "psixy"]:
-            # Linear extrapolation
-            newvar[1, :] = 2.0 * newvar[2, :] - newvar[3, :]
-            newvar[0, :] = 2.0 * newvar[1, :] - newvar[2, :]
-            newvar[-2, :] = 2.0 * newvar[-3, :] - newvar[-4, :]
-            newvar[-1, :] = 2.0 * newvar[-2, :] - newvar[-3, :]
-        else:
-            # Constant extrapolation
-            newvar[1, :] = newvar[2, :]
-            newvar[0, :] = newvar[2, :]
-            newvar[-2, :] = newvar[-3, :]
-            newvar[-1, :] = newvar[-3, :]
-        grd[name] = newvar
-
-
     Rxy = grd["Rxy"]
     Zxy = grd["Zxy"]
     nx, ny = Rxy.shape
@@ -735,7 +713,7 @@ def Convert_grids(gridue_file: str, output_filename: str, plotting: bool = False
         #SF case
         ixseps1 = g["iyseparatrix1"] + 2  # Main X-point separatrix
         ixseps2 = min(g["iyseparatrix3"] + 2, nx)  # Secondary X-point separatrix
-        # Remove guard cells on either side of upper X-point.
+        # Remove guard cells on either side of X-point.
         ny_inner = g["ix_inner"]
         for name in grd:
             var = grd[name]
@@ -763,12 +741,40 @@ def Convert_grids(gridue_file: str, output_filename: str, plotting: bool = False
         g["ix_cut3"] = g["ix_cut3"] - 3
         g["ix_cut4"] = g["ix_cut4"] - 2
 
+    # Extrapolate X (radial) boundary cells
+    # Removing one cell, adding two on each X boundary
+    for name in grd:
+        var = grd[name]
+        nx, ny = var.shape
+        newvar = np.zeros((nx + 2, ny))
+        newvar[2:-2, :] = var[1:-1, :]
+        if name in ["Rxy", "Zxy", "psixy"]:
+            # Linear extrapolation
+            newvar[1, :] = 2.0 * newvar[2, :] - newvar[3, :]
+            newvar[0, :] = 2.0 * newvar[1, :] - newvar[2, :]
+            newvar[-2, :] = 2.0 * newvar[-3, :] - newvar[-4, :]
+            newvar[-1, :] = 2.0 * newvar[-2, :] - newvar[-3, :]
+        else:
+            # Constant extrapolation
+            newvar[1, :] = newvar[2, :]
+            newvar[0, :] = newvar[2, :]
+            newvar[-2, :] = newvar[-3, :]
+            newvar[-1, :] = newvar[-3, :]
+        grd[name] = newvar
+
     # Re assign grid indices after removing guard cells
     jyseps1_1 = g["ix_cut1"] - 1
     jyseps2_1 = g["ix_cut2"]
     ny_inner = g["ix_inner"]
     jyseps1_2 = g["ix_cut3"]
     jyseps2_2 = g["ix_cut4"] - 1
+
+        #jyseps2_1 should always be smaller that jyseps1_2. Only inconsistency found here is for SN.
+    if jyseps1_2 < jyseps2_1:
+        jyseps1_2 = jyseps2_1
+        ny_inner = jyseps2_1
+        #For Single Null (SN) cases, Ingrid sets this values to be different, but BOUT++ expects them to be the same.
+        print ("WARNING: Adjusting jyseps1_2 to be equal to jyseps2_1 for consistency with BOUT++ expectations. This is expected for Single Null cases.")
 
     # Calculate metric tensor
     grd.update(calcMetric(grd, bpsign, verbose, ignore_checks))
@@ -931,6 +937,13 @@ def getMeshTopology(g, nx, ny):
     ny_inner = g["ix_inner"]
     jyseps1_2 = g["ix_cut3"]
     jyseps2_2 = g["ix_cut4"] - 1
+
+    #jyseps2_1 should always be smaller that jyseps1_2. Only inconsistency found here is for SN.
+    if jyseps1_2 < jyseps2_1:
+        jyseps1_2 = jyseps2_1
+        ny_inner = jyseps2_1
+        #For Single Null (SN) cases, Ingrid sets this values to be different, but BOUT++ expects them to be the same.
+        print ("WARNING: Adjusting jyseps1_2 to be equal to jyseps2_1 for consistency with BOUT++ expectations. This is expected for Single Null cases.")
     
     if (jyseps1_1 < 0 and jyseps2_2 >= ny - 1):
         return "CFL"
