@@ -32,3 +32,6 @@ MANIFEST
 # Sphinx documentation
 docs/_build/
 doc/_build/
+
+#Local changes I have made.
+my_examples/
